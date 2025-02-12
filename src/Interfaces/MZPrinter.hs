@@ -23,6 +23,7 @@ import Data.List
 import Interfaces.MZASTBase
 import Interfaces.MZAST (turnToItem, GItem)
 import Interfaces.MZBuiltIns (opPrec)
+import Prelude hiding ((<>))
 
 -- | The main function that is used to pretty print the MiniZinc model. The 'Text.PrettyPrint.Style' used is the following.
 -- 

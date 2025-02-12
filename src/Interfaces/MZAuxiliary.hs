@@ -33,6 +33,9 @@ data Configuration
            }
   deriving Show
 
+instance Semigroup Configuration where
+  (<>) = mappend
+
 instance Monoid Configuration where
   mempty = Config { minizinc = ""
                   , chocosolver = ""
