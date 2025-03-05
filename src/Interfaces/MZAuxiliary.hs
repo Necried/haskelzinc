@@ -25,8 +25,8 @@ import qualified Text.Parsec.Combinator as C1
 -- | A record containing the required paths for the constraint models to be run by
 -- the solvers.
 data Configuration 
-  = Config { minizinc    :: FilePath -- ^ Path to the directory of @mzn2fzn@ and 
-                                     -- @flatzinc@ executables
+  = Config { minizinc    :: FilePath -- ^ Path to the directory of @mzn2fzn@
+           , flatzinc    :: FilePath -- ^ Path to fzn-gecode
            , chocosolver :: FilePath -- ^ Path to the choco_solver java library
            , chocoparser :: FilePath -- ^ Path to the choco_parser java library
            , antlr_path  :: FilePath -- ^ Path to the antlr java library
@@ -38,6 +38,7 @@ instance Semigroup Configuration where
 
 instance Monoid Configuration where
   mempty = Config { minizinc = ""
+                  , flatzinc = ""
                   , chocosolver = ""
                   , chocoparser = ""
                   , antlr_path = ""
@@ -45,6 +46,7 @@ instance Monoid Configuration where
    
   mappend a b = 
     Config { minizinc    = dropEmpty (minizinc a) (minizinc b)
+           , flatzinc    = dropEmpty (flatzinc a) (flatzinc b)
            , chocosolver = dropEmpty (chocosolver a) (chocosolver b)
            , chocoparser = dropEmpty (chocoparser a) (chocoparser b)
            , antlr_path  = dropEmpty (antlr_path a) (antlr_path b)
@@ -58,21 +60,31 @@ dropEmpty "" b  = b
 makeConf :: Either (P.ParseError) (String, String) -> Configuration
 makeConf (Right (name, path))
   | name == conf_mz = Config { minizinc    = path
+                             , flatzinc = ""
+                             , chocosolver = ""
+                             , chocoparser = ""
+                             , antlr_path  = ""
+                             }
+  | name == conf_fz = Config { minizinc    = ""
+                             , flatzinc    = path
                              , chocosolver = ""
                              , chocoparser = ""
                              , antlr_path  = ""
                              }
   | name == conf_cs = Config { minizinc    = ""
+                             , flatzinc = ""
                              , chocosolver = path
                              , chocoparser = ""
                              , antlr_path  = ""
                              }
   | name == conf_cp = Config { minizinc    = ""
+                             , flatzinc    = ""
                              , chocosolver = ""
                              , chocoparser = path
                              , antlr_path  = ""
                              }
   | name == conf_an = Config { minizinc    = ""
+                             , flatzinc    = ""
                              , chocosolver = ""
                              , chocoparser = ""
                              , antlr_path  = path
@@ -84,6 +96,7 @@ makeConf (Left err) = mempty
 
 choco = "CHOCO_"
 conf_mz = "MINIZINC_DIR"
+conf_fz = "FLATZINC_DIR"
 conf_cs = "SOLVER"
 conf_cp = "PARSER"
 conf_an = "ANTLR"
@@ -95,6 +108,7 @@ parser_cp = parser_choco >> string "PARSER"
 parser_an = string conf_an
 
 emptyConf = Config { minizinc    = ""
+                   , flatzinc    = ""
                    , chocosolver = ""
                    , chocoparser = ""
                    , antlr_path  = ""

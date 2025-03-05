@@ -100,28 +100,36 @@ testModelWithParser :: Parser [Solution] -- ^ The parser with which solutions wi
 testModelWithParser p m mpath s n = do
   -- Get configuration and set filepaths
   configuration <- parseConfig
-  let mz_dir = addTrailingPathSeparator $ case minizinc configuration of
-                                          ""  ->  "."
-                                          str -> str
+  let mz_dir = case minizinc configuration of
+                 ""  ->  ""
+                 str -> addTrailingPathSeparator str
+      fz_dir = case flatzinc configuration of
+                 ""  ->  ""
+                 str -> addTrailingPathSeparator str
   let mzn_fp = spaceFix $ mpath ++ ".mzn"
   let fzn_fp = spaceFix $ mpath ++ ".fzn"
   let res_fp = spaceFix $ mpath ++ ".res"
   -- Write mzn file
   writeFile mzn_fp (layout m)
-  let mzn2fzn  = proc (mz_dir ++ "mzn2fzn") ["-O-"
-                                            ,"-o", fzn_fp
-                                            , mzn_fp]
+  let mzn2fzn  = shell $
+        (mz_dir ++ "minizinc -c --solver org.minizinc.mzn-fzn") ++
+        intercalate " "
+          [" -O-"
+          ,"-o", fzn_fp
+          , mzn_fp]
+  print mzn2fzn
   (ec1, out1, err1) <- readCreateProcessWithExitCode mzn2fzn ""
+  print (mzn_fp, fzn_fp, res_fp)
   res <- case err1 of
          "" -> case s of
                -- G12/FD solver
                1 -> do
-                    let fz_options = ["-b", "fd"]
-                                     ++ case (n > 0) of
+                    let fz_options = -- ["-b", "fd"] ++
+                                     case (n > 0) of
                                         True -> ["-n", show n]
                                         _    -> []
                                      ++ [fzn_fp]
-                    let flatzinc = proc (mz_dir ++ "flatzinc") fz_options
+                    let flatzinc = shell $ (fz_dir ++ "fzn-gecode" ++ " ") ++ intercalate " " fz_options
                     (ec2, out2, err2) <- readCreateProcessWithExitCode flatzinc ""
                     return $ case err2 of
                              "" -> out2
@@ -135,9 +143,9 @@ testModelWithParser p m mpath s n = do
          _  -> readIO ("mzn2fzn error: " ++ err1 ++ ".")
   writeFile res_fp res
   -- Comment lines below for debugging
-  removeFile res_fp
-  removeFile mzn_fp
-  removeFile fzn_fp
+  -- removeFile res_fp
+  -- removeFile mzn_fp
+  -- removeFile fzn_fp
   return $ getAllSolutions p res
 
 -- | Writes the model's data file. The 'MZModel' of the argument must contain
