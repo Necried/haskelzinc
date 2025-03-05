@@ -36,7 +36,7 @@ module Interfaces.MZAST (
   -- * User defined operations
   prefCall, infCall, prefOp, infOp, let_,
   -- * Types
-  ($$),
+  ($$), ctvar,
   -- * Annotations
   annotation, (|:),
   -- * Others
@@ -436,7 +436,6 @@ forall :: [CompTail] -- ^ Generator expressions' representation
 forall cts name e = GenCall (Simpl name) (mergeCompTails cts) e
 
 -- Constrained types
-{-
 -- | Represents a constrained type defined by a set parameter.
 --
 -- Example:
@@ -448,7 +447,7 @@ forall cts name e = GenCall (Simpl name) (mergeCompTails cts) e
 -- var one2three: x;
 ctvar :: String -> Type
 ctvar = CT . Var . Simpl
--}
+
 -- | Represents a type variable.
 ($$) :: String -> Type
 ($$) = VarType
