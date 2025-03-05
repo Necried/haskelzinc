@@ -103,6 +103,7 @@ conf_an = "ANTLR"
 
 parser_choco = string choco
 parser_mz = string conf_mz
+parser_fz = string conf_fz
 parser_cs = parser_choco >> string "SOLVER"
 parser_cp = parser_choco >> string "PARSER"
 parser_an = string conf_an
@@ -123,13 +124,16 @@ parseConfig = do
 
 parserLine :: Parser (String, String)
 parserLine = do
-  left <- try parser_mz <|> (try parser_cs <|> parser_cp) <|> parser_an
+  left <-
+    try parser_mz
+    <|> try parser_fz
+    <|> (try parser_cs <|> parser_cp) <|> parser_an
   C.spaces
   char '='
   C.spaces
   right <- parserr
   return (left,right)
-  
+
 parserr :: Parser String
 parserr = manyTill anyChar eof
 
